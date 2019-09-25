@@ -14,9 +14,10 @@
         "fideloper/proxy": "^4.0",
         "laravel/framework": "5.8.*",
         "laravel/tinker": "^1.0",
+        "php-ffmpeg/php-ffmpeg": "^0.14.0",
         "phpquery/phpquery": "^0.0.2",
-        "vkcom/vk-php-sdk": "^5.100",
-        "tymon/jwt-auth": "^1.0"
+        "tymon/jwt-auth": "^1.0",
+        "vkcom/vk-php-sdk": "^5.100"
     },
     "require-dev": {
         "beyondcode/laravel-dump-server": "^1.0",

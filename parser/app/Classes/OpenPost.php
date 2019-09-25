@@ -106,6 +106,7 @@ class OpenPost extends Parser
         if (@file_get_contents($audio_track,false, $this->context) === FALSE){
             if (empty($this->gif)){ //если изначально было спаршено как гиф, то не выполнять
                 $this->gif = $this->checkVideoQuality($video_link . "DASH_1080", 0);
+                echo $this->gif;
             }
             return null;
         }
