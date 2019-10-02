@@ -9,8 +9,8 @@ for ($i = 0; $i < 1; $i++){ //кол-во постов для парсинга, 
     $parser = new Parser("https://www.reddit.com/r/Pikabu/top/?t=day", $i);
     echo "<br>" . $parser->headerPost();
     echo "<br>" . $parser->urlPost();
-
-    $openpost = new OpenPost("https://www.reddit.com/r/Pikabu/comments/d916r9/", $i);
+//    https://www.reddit.com/r/Pikabu/comments/d80wf6/
+    $openpost = new OpenPost($parser->urlOpenPost, $i);
     echo "<br>" . $openpost->textPost();
     echo "<br>" . $openpost->imgPost();
     echo "<br>" . $openpost->gfycatPost();

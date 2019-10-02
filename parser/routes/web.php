@@ -15,4 +15,8 @@ Route::get('/', function () {
     return view('index');
 });
 
+Route::get('/insertVK', function () {
+    return view('insertVK');
+});
+
 
