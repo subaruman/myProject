@@ -30,7 +30,7 @@ class Parser
         $this->urlForParse = $url;
         $this->numberPost = $numberPost;
 
-        $file = file_get_contents($this->urlForParse,false,$this->context);
+        $file = file_get_contents($this->urlForParse,false, $this->context);
         $this->contentOpenPage = phpQuery::newDocument($file);
     }
 
