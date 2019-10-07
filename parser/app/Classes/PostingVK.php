@@ -5,8 +5,10 @@ namespace App\Classes;
 
 
 use FFMpeg\Coordinate\Dimension;
+use FFMpeg\Coordinate\FrameRate;
 use FFMpeg\Coordinate\TimeCode;
 use FFMpeg\FFMpeg;
+use FFMpeg\Format\Video\WebM;
 
 class PostingVK extends SQL
 {
@@ -34,10 +36,10 @@ class PostingVK extends SQL
 
         $methodVK = $this->downloadMedia();
         $responseArr = $this->uploadPostData();
-        printr($responseArr);
+//        printr($responseArr);
 
-        $responseArr = $this->uploadOnServerVK($responseArr, 'photos.saveWallPhoto');
-        printr($responseArr);
+        $responseArr = $this->uploadOnServerVK($responseArr, $methodVK);
+//        printr($responseArr);
 
         $this->createPost($responseArr);
 
@@ -53,8 +55,7 @@ class PostingVK extends SQL
             file_put_contents($path, file_get_contents($url)); //скачивание медиа
             $this->img = new \CURLFile($path);
             $this->post_data = array('file1' => $this->img);
-            $methodVK = 'photos';
-            $this->getUploadUrl($methodVK . '.getWallUploadServer');
+            $this->getUploadUrl('photos.getWallUploadServer');
             $methodVK = 'photos.saveWallPhoto'; //для использования в uploadOnServerVk
 
         } else if(!empty($dataFromBd->Link_gif)){
@@ -65,8 +66,7 @@ class PostingVK extends SQL
             $path = $this->convertToGif();
             $this->gif = new \CURLFile($path);
             $this->post_data = ['file' => $this->gif];
-            $methodVK = 'docs';
-            $this->getUploadUrl($methodVK . '.getWallUploadServer');
+            $this->getUploadUrl('docs.getWallUploadServer');
             $methodVK = 'docs.save'; //для использования в uploadOnServerVk
         }
         return $methodVK;
@@ -77,9 +77,16 @@ class PostingVK extends SQL
         $ffmpeg = FFMpeg::create();
         $path = '/var/www/html/parser/resources/src/converted_Gif_VK.gif';
         $video = $ffmpeg->open( '/var/www/html/parser/resources/src/gif_VK.gif' );
-        $video
-            ->gif(TimeCode::fromSeconds(0), new Dimension(640, 480))
+
+
+//        $video
+//            ->filters()->framerate(new FrameRate(30), 30);
+//        $video->save(new WebM(), '/var/www/html/parser/resources/src/video.webm');
+//        $video = $ffmpeg->open('/var/www/html/parser/resources/src/video.webm');
+       $video
+            ->gif(TimeCode::fromSeconds(0), new Dimension(320, 240))
             ->save($path);
+
         return $path;
     }
 
@@ -155,17 +162,16 @@ class PostingVK extends SQL
         curl_setopt($ch, CURLOPT_POSTFIELDS, $request_params);
         $response = curl_exec( $ch );
         curl_close( $ch );
-        $responseArr = json_decode($response, true); //возвращается не обьект, а массив
+        $responseArr = json_decode($response, true); //флаг true, возвращается не обьект, а массив
         return $responseArr;
     }
 
       public function createPost ($responseArr){
         $dataFromBD = $this->selectBD();
-        printr($dataFromBD);
 
         if (!empty($responseArr['response'][0]['id'])) {         //проверка какой тип файла был загружен
             $photo_id = $responseArr['response'][0]['id'];
-            $owner_id = $responseArr['response'][0]['owner_id'];                //отрицательное значение для вк
+            $owner_id = $responseArr['response'][0]['owner_id'];
             $request_params = array(
                 'user_id' => $this->user_id,
                 'owner_id' => -$this->group_id,
@@ -175,14 +181,15 @@ class PostingVK extends SQL
                 'access_token' => "$this->access_token_user"
             );
         } else
-            if (isset($responseArr['response']['doc']['id']) === true) {  //проверка какой тип файла был загружен
+            if (!empty($responseArr['response']['doc']['id'])) {  //проверка какой тип файла был загружен
 //                $doc_id = $responseArr->response->doc->id;
                 $doc_id = $responseArr['response']['doc']['id'];
+                $owner_id = $responseArr['response']['doc']['owner_id'];
                 $request_params = [
                     'user_id' => $this->user_id,
                     'owner_id' => -$this->group_id,
                     'message' => $dataFromBD->header . PHP_EOL . PHP_EOL . $dataFromBD->Link_post,
-                    'attachments' => 'doc' . $owner_id. '_' . $doc_id,
+                    'attachments' => 'doc' . $owner_id . '_' . $doc_id,
                     'v' => 5.101,
                     'access_token' => "$this->access_token_user"
                 ];
