@@ -6,7 +6,7 @@ namespace App\Classes;
 set_time_limit(1000);
 
 for ($i = 0; $i < 8; $i++){ //кол-во постов для парсинга, больше 8 не работает, т.к. лента не прогружает
-    $parser = new Parser("https://www.reddit.com/r/Pikabu/top/?t=day", $i);
+  /*  $parser = new Parser("https://www.reddit.com/r/Pikabu/top/?t=day", $i);
     echo "<br>" . $parser->headerPost();
     echo "<br>" . $parser->urlPost();
 //    https://www.reddit.com/r/Pikabu/comments/d80wf6/
@@ -19,14 +19,14 @@ for ($i = 0; $i < 8; $i++){ //кол-во постов для парсинга, 
 
     $query = new SQL($parser->header, $parser->urlOpenPost, $openpost->text, $openpost->img, $openpost->video, $openpost->gif,
         $openpost->gfycat);
-    $query->insertBD();
+    $query->insertBD();*/
 
 
     echo "<br>" . "__________________________________________________";
 }
 
 $postVK = new PostingVK();
-
+//file_put_contents('/var/www/html/parser/resources/src/video_VK.mp4', file_get_contents('https://v.redd.it/he0iquk062r31/DASH_360'))
 
 
 ?>

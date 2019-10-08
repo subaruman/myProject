@@ -36,10 +36,10 @@ class PostingVK extends SQL
 
         $methodVK = $this->downloadMedia();
         $responseArr = $this->uploadPostData();
-//        printr($responseArr);
+        printr($responseArr);
 
         $responseArr = $this->uploadOnServerVK($responseArr, $methodVK);
-//        printr($responseArr);
+        printr($responseArr);
 
         $this->createPost($responseArr);
 
@@ -50,6 +50,7 @@ class PostingVK extends SQL
         $path = '';
         $dataFromBd = $this->selectBD();
         if (!empty($dataFromBd->Link_img)){
+
             $url = $dataFromBd->Link_img;
             $path = '/var/www/html/parser/resources/src/photo_VK.jpg';
             file_put_contents($path, file_get_contents($url)); //скачивание медиа
@@ -68,6 +69,16 @@ class PostingVK extends SQL
             $this->post_data = ['file' => $this->gif];
             $this->getUploadUrl('docs.getWallUploadServer');
             $methodVK = 'docs.save'; //для использования в uploadOnServerVk
+
+        } else if(!empty($dataFromBd->Link_video)){
+
+            $url = $dataFromBd->Link_video;
+            $path = '/var/www/html/parser/resources/src/video_VK.mp4';
+            file_put_contents($path, file_get_contents($url));
+            $this->video = new \CURLFile($path);
+            $this->post_data = ['video_file' => $this->video];
+            $this->getUploadUrl('video.save');
+            $methodVK = 'video.save';
         }
         return $methodVK;
     }
@@ -92,17 +103,28 @@ class PostingVK extends SQL
 
 
 
-//https://api.vk.com/method/photos.getWallUploadServer? для картинки
+//photos.getWallUploadServer для картинки
 //docs.getWallUploadServer для гиф
 //docs.getUploadServer
-    //получение ссылки для загрузки изображения
+    //получение ссылки для загрузки медиа контента
     public function getUploadUrl($methodVK){
-        $request_params = array(
-            'album_id' => $this->album_id,
-            'group_id' => $this->group_id,
-            'access_token' => $this->access_token_user,
-            'v' => $this->v
-        );
+        if ($methodVK === 'video.save'){
+            $request_params = [
+//                'album_id' => $this->album_id,
+                'name' => 'test',
+                'wallpost' => 0,
+                'group_id' => $this->group_id,
+                'access_token' => $this->access_token_user,
+                'v' => $this->v
+            ];
+        } else {
+            $request_params = array(
+                'album_id' => $this->album_id,
+                'group_id' => $this->group_id,
+                'access_token' => $this->access_token_user,
+                'v' => $this->v
+            );
+        }
         $get_params = http_build_query($request_params);
         $result = file_get_contents('https://api.vk.com/method/' . $methodVK . "?" . $get_params);
         $resultArr = json_decode($result);
@@ -138,9 +160,7 @@ class PostingVK extends SQL
                 'access_token' => $this->access_token_user,
                 'v' => $this->v
             );
-        }
-
-        if ($methodVK === 'docs.save') {
+        } else if ($methodVK === 'docs.save') {
             $request_params = [
                 'file' => $responseArr->file,
 //            'title' => 'test',
@@ -150,10 +170,12 @@ class PostingVK extends SQL
                 'access_token' => $this->access_token_user,
                 'v' => $this->v
             ];
-        }
+            //видео загружается сразу, поэтому выход из этого метода
+        } else return $responseArr = json_decode(json_encode($responseArr), true); //преобазование обьекта в массив
+
         $get_params = http_build_query($request_params);
 
-        //загрузка изображения на сервер вк
+        //загрузка медиа на сервер вк
         $ch = curl_init( 'https://api.vk.com/method/' . $methodVK . '?' . $get_params);
         curl_setopt($ch, CURLOPT_POST, 1);
         curl_setopt( $ch, CURLOPT_RETURNTRANSFER, true );
@@ -168,7 +190,6 @@ class PostingVK extends SQL
 
       public function createPost ($responseArr){
         $dataFromBD = $this->selectBD();
-
         if (!empty($responseArr['response'][0]['id'])) {         //проверка какой тип файла был загружен
             $photo_id = $responseArr['response'][0]['id'];
             $owner_id = $responseArr['response'][0]['owner_id'];
@@ -193,9 +214,19 @@ class PostingVK extends SQL
                     'v' => 5.101,
                     'access_token' => "$this->access_token_user"
                 ];
-            }
-
-
+            } else
+                if (!empty($responseArr['video_id'])) {
+                    $video_id = $responseArr['video_id'];
+                    $owner_id = $responseArr['owner_id'];
+                    $request_params = [
+                        'user_id' => $this->user_id,
+                        'owner_id' => -$this->group_id,
+                        'message' => $dataFromBD->header . PHP_EOL . PHP_EOL . $dataFromBD->Link_post,
+                        'attachments' => 'video' . $owner_id . '_' . $video_id,
+                        'v' => 5.101,
+                        'access_token' => "$this->access_token_user"
+                    ];
+                }
         //непосредственно постинг в вк
         $get_params = http_build_query($request_params);
         $result = json_decode(file_get_contents('https://api.vk.com/method/wall.post?' . $get_params));
