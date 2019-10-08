@@ -20,6 +20,7 @@ class CreateUsersTable extends Migration
             $table->text('text')->nullable();
             $table->string('Link_img')->nullable();
             $table->string('Link_video')->nullable();
+            $table->string('Link_audio')->nullable();
             $table->string('Link_gif')->nullable();
             $table->string('Link_gfycat')->nullable();
         });

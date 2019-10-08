@@ -18,13 +18,8 @@ class PostingVK extends SQL
     public $vkAppId = 7081424; //id standalone приложения
     public $v = 5.101; //версия апи вк
 
-    public $request_params;
-
     public $uploadUrl; //ссылка для загрузки
-    public $img;    //сама картинка
     public $post_data;  //массив с картинками для запроса
-
-    public $media;
 
     public $access_token_user;
     public $access_token_group;
@@ -36,10 +31,10 @@ class PostingVK extends SQL
 
         $methodVK = $this->downloadMedia();
         $responseArr = $this->uploadPostData();
-        printr($responseArr);
+//        printr($responseArr);
 
         $responseArr = $this->uploadOnServerVK($responseArr, $methodVK);
-        printr($responseArr);
+//        printr($responseArr);
 
         $this->createPost($responseArr);
 
@@ -47,7 +42,6 @@ class PostingVK extends SQL
 
     //скачивание медиа контента по юрл
     public function downloadMedia(){
-        $path = '';
         $dataFromBd = $this->selectBD();
         if (!empty($dataFromBd->Link_img)){
 
@@ -55,7 +49,7 @@ class PostingVK extends SQL
             $path = '/var/www/html/parser/resources/src/photo_VK.jpg';
             file_put_contents($path, file_get_contents($url)); //скачивание медиа
             $this->img = new \CURLFile($path);
-            $this->post_data = array('file1' => $this->img);
+            $this->post_data = ['file1' => $this->img];
             $this->getUploadUrl('photos.getWallUploadServer');
             $methodVK = 'photos.saveWallPhoto'; //для использования в uploadOnServerVk
 
@@ -73,9 +67,16 @@ class PostingVK extends SQL
         } else if(!empty($dataFromBd->Link_video)){
 
             $url = $dataFromBd->Link_video;
-            $path = '/var/www/html/parser/resources/src/video_VK.mp4';
-            file_put_contents($path, file_get_contents($url));
-            $this->video = new \CURLFile($path);
+            $path1 = '/var/www/html/parser/resources/src/video_VK.mp4';
+            file_put_contents($path1, file_get_contents($url));
+
+            $audio = $dataFromBd->Link_audio;
+            $path2 = '/var/www/html/parser/resources/src/audio_VK.mp4';
+            file_put_contents($path2, file_get_contents($audio));
+
+            $this->video = $this->concatVideoAudio($path1, $path2);
+
+            $this->video = new \CURLFile($this->video);
             $this->post_data = ['video_file' => $this->video];
             $this->getUploadUrl('video.save');
             $methodVK = 'video.save';
@@ -89,7 +90,6 @@ class PostingVK extends SQL
         $path = '/var/www/html/parser/resources/src/converted_Gif_VK.gif';
         $video = $ffmpeg->open( '/var/www/html/parser/resources/src/gif_VK.gif' );
 
-
 //        $video
 //            ->filters()->framerate(new FrameRate(30), 30);
 //        $video->save(new WebM(), '/var/www/html/parser/resources/src/video.webm');
@@ -99,6 +99,21 @@ class PostingVK extends SQL
             ->save($path);
 
         return $path;
+    }
+
+    public function concatVideoAudio($video, $audio){
+        $pathAudio = '/var/www/html/parser/resources/src/audio.mp3';
+        $pathVideo = '/var/www/html/parser/resources/src/video_with_audio.mp4';
+        $path = '/var/www/html/parser/resources/src/';
+
+        //удаление старых файлов, от предыдущих постов
+        unlink($pathAudio);
+        unlink($pathVideo);
+        //перекодирование видео в звук
+    shell_exec("ffmpeg -i $audio -vn -ar 44100 -ac 2 -ab 320K -f mp3 " . $pathAudio);
+    //склеивание звука и видео
+    shell_exec("ffmpeg -i " . $pathAudio . " -i $video " . $pathVideo);
+    return $pathVideo;
     }
 
 
@@ -118,12 +133,12 @@ class PostingVK extends SQL
                 'v' => $this->v
             ];
         } else {
-            $request_params = array(
+            $request_params = [
                 'album_id' => $this->album_id,
                 'group_id' => $this->group_id,
                 'access_token' => $this->access_token_user,
                 'v' => $this->v
-            );
+            ];
         }
         $get_params = http_build_query($request_params);
         $result = file_get_contents('https://api.vk.com/method/' . $methodVK . "?" . $get_params);
@@ -152,14 +167,14 @@ class PostingVK extends SQL
 //docs.save для постинга гифок
     public function uploadOnServerVK($responseArr, $methodVK){
         if ($methodVK === 'photos.saveWallPhoto'){
-            $request_params = array(
+            $request_params = [
                 'group_id' => $this->group_id,
                 'server' => $responseArr->server,
                 'photo' => $responseArr->photo,
                 'hash' => $responseArr->hash,
                 'access_token' => $this->access_token_user,
                 'v' => $this->v
-            );
+            ];
         } else if ($methodVK === 'docs.save') {
             $request_params = [
                 'file' => $responseArr->file,
@@ -193,14 +208,14 @@ class PostingVK extends SQL
         if (!empty($responseArr['response'][0]['id'])) {         //проверка какой тип файла был загружен
             $photo_id = $responseArr['response'][0]['id'];
             $owner_id = $responseArr['response'][0]['owner_id'];
-            $request_params = array(
+            $request_params = [
                 'user_id' => $this->user_id,
                 'owner_id' => -$this->group_id,
                 'message' => $dataFromBD->header . PHP_EOL . PHP_EOL . $dataFromBD->Link_post,
                 'attachments' => 'photo' . $owner_id . '_' . $photo_id,
                 'v' => 5.101,
                 'access_token' => "$this->access_token_user"
-            );
+            ];
         } else
             if (!empty($responseArr['response']['doc']['id'])) {  //проверка какой тип файла был загружен
 //                $doc_id = $responseArr->response->doc->id;

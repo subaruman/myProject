@@ -8,13 +8,14 @@ class SQL extends OpenPost
 {
     public $maxID;
     public function __construct($header, $urlOpenPost, $text = null, $img = null,
-                                $video = null, $gif = null, $gfycat = null)
+                                $video = null, $audio = null, $gif = null, $gfycat = null)
     {
        $this->header = $header;
        $this->urlOpenPost = $urlOpenPost;
        $this->text = $text;
        $this->img = $img;
        $this->video = $video;
+       $this->audio = $audio;
        $this->gif = $gif;
        $this->gfycat = $gfycat;
     }
@@ -29,6 +30,7 @@ class SQL extends OpenPost
                 'text' => $this->text,
                 'Link_img' => $this->img,
                 'Link_video' => $this->video,
+                'Link_audio' => $this->audio,
                 'Link_gif' => $this->gif,
                 'Link_gfycat' => $this->gfycat]
         );

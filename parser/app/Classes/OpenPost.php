@@ -12,7 +12,7 @@ class OpenPost extends Parser
     public $gfycat;
     public $gif;
     public $video;
-    public $audio_track;
+    public $audio;
 
     const TEXT = "._3xX726aBn29LDbsDtzr_6E._1Ap4F5maDtT1E1YuCiaO0r.D3IL3FD0RFy_mkKLPwL4";
     const IMG = "._3Oa0THmZ3f5iZXAQ0hBJ0k";
@@ -63,8 +63,9 @@ class OpenPost extends Parser
             $video_link = $video_link->attr('src');
             $video_link = substr($video_link, 0, 32);
             $video_link = $this->checkAudioTrack($video_link);
-            $video_link = $video_link  . "DASH_1080";
 
+            $video_link = $video_link  . "DASH_1080";
+            //проверка video_link на пустоту
             if ($video_link !== "DASH_1080" && $video_link !== "DASH_720" &&
                 $video_link !== "DASH_480" && $video_link !== "DASH_360" &&
                 $video_link !== "DASH_240" && $video_link !== "DASH_144"
@@ -108,8 +109,10 @@ class OpenPost extends Parser
                 $this->gif = $this->checkVideoQuality($video_link . "DASH_1080", 0);
                 echo $this->gif;
             }
+
             return null;
         }
+        $this->audio = $audio_track;
         return $video_link;
         /*$video_link = substr($this->video, 0, -9);
         $quality = substr($video_link, -9, 9); //определение какого качества видео
