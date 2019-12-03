@@ -24,10 +24,16 @@ class PostingVK extends SQL
     public $access_token_user;
     public $access_token_group;
 
+    public $dataFromBD;
+
     public function __construct()
     {
         $this->access_token_user = env('VK_TOKEN_USER', false);
         $this->access_token_group = env('VK_TOKEN_GROUP', false);
+
+        $this->dataFromBD = $this->selectBD();
+        if (empty($this->dataFromBD->was_posted)) {
+
 
         $methodVK = $this->downloadMedia();
         $responseArr = $this->uploadPostData();
@@ -37,7 +43,8 @@ class PostingVK extends SQL
 //        printr($responseArr);
 
         $this->createPost($responseArr);
-
+        }
+        else echo "<br>Такой пост уже был";
     }
 
     //скачивание медиа контента по юрл
@@ -101,6 +108,7 @@ class PostingVK extends SQL
         return $path;
     }
 
+    //склеивание аудио и видео
     public function concatVideoAudio($video, $audio){
         $pathAudio = '/var/www/html/parser/resources/src/audio.mp3';
         $pathVideo = '/var/www/html/parser/resources/src/video_with_audio.mp4';
@@ -204,14 +212,13 @@ class PostingVK extends SQL
     }
 
       public function createPost ($responseArr){
-        $dataFromBD = $this->selectBD();
         if (!empty($responseArr['response'][0]['id'])) {         //проверка какой тип файла был загружен
             $photo_id = $responseArr['response'][0]['id'];
             $owner_id = $responseArr['response'][0]['owner_id'];
             $request_params = [
                 'user_id' => $this->user_id,
                 'owner_id' => -$this->group_id,
-                'message' => $dataFromBD->header . PHP_EOL . PHP_EOL . $dataFromBD->Link_post,
+                'message' => $this->dataFromBD->header . PHP_EOL . PHP_EOL . $this->dataFromBD->Link_post,
                 'attachments' => 'photo' . $owner_id . '_' . $photo_id,
                 'v' => 5.101,
                 'access_token' => "$this->access_token_user"
@@ -224,7 +231,7 @@ class PostingVK extends SQL
                 $request_params = [
                     'user_id' => $this->user_id,
                     'owner_id' => -$this->group_id,
-                    'message' => $dataFromBD->header . PHP_EOL . PHP_EOL . $dataFromBD->Link_post,
+                    'message' => $this->dataFromBD->header . PHP_EOL . PHP_EOL . $this->dataFromBD->Link_post,
                     'attachments' => 'doc' . $owner_id . '_' . $doc_id,
                     'v' => 5.101,
                     'access_token' => "$this->access_token_user"
@@ -236,7 +243,7 @@ class PostingVK extends SQL
                     $request_params = [
                         'user_id' => $this->user_id,
                         'owner_id' => -$this->group_id,
-                        'message' => $dataFromBD->header . PHP_EOL . PHP_EOL . $dataFromBD->Link_post,
+                        'message' => $this->dataFromBD->header . PHP_EOL . PHP_EOL . $this->dataFromBD->Link_post,
                         'attachments' => 'video' . $owner_id . '_' . $video_id,
                         'v' => 5.101,
                         'access_token' => "$this->access_token_user"
@@ -245,6 +252,8 @@ class PostingVK extends SQL
         //непосредственно постинг в вк
         $get_params = http_build_query($request_params);
         $result = json_decode(file_get_contents('https://api.vk.com/method/wall.post?' . $get_params));
+
+        $this->updateBD($this->dataFromBD->id);
         printr( $result);
     }
 }

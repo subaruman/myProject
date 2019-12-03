@@ -23,6 +23,7 @@ class CreateUsersTable extends Migration
             $table->string('Link_audio')->nullable();
             $table->string('Link_gif')->nullable();
             $table->string('Link_gfycat')->nullable();
+            $table->boolean('was_posted')->nullable();
         });
     }
 

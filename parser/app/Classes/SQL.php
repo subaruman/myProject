@@ -21,6 +21,7 @@ class SQL extends OpenPost
     }
 
     public function insertBD() {
+
         $this->maxID = DB::table('post')->max('id');
         $this->maxID++;
         DB::table('post')->insertOrIgnore(
@@ -41,6 +42,13 @@ class SQL extends OpenPost
         $this->maxID = DB::table('post')->max('id');
         $post = DB::select('SELECT * FROM post WHERE id = ?' , [$this->maxID]);
         return $post[0];
+    }
+
+    public function updateBD($id) {
+        DB::table('post')->where('id', $id)
+            ->update([
+               'was_posted' => 1
+            ]);
     }
 
 }
