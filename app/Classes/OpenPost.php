@@ -114,23 +114,5 @@ class OpenPost extends Parser
         }
         $this->audio = $audio_track;
         return $video_link;
-        /*$video_link = substr($this->video, 0, -9);
-        $quality = substr($video_link, -9, 9); //определение какого качества видео
-        if ($quality === "DASH_1080"){ //для кач-ва 1080
-            $audio_track = $video_link . "audio";
-        }
-        else { //для остального кач-ва
-            $video_link = substr($this->video, 0, -8);
-            $audio_track = $video_link . "audio";
-        }
-        if (!empty($audio_track)){
-            $this->audio_track = $audio_track;
-            return $audio_track;
-        } else {
-            $this->video = $this->gif;
-            return null;
-        }*/
     }
-
-
 }
