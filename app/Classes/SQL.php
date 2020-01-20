@@ -7,6 +7,8 @@ use Illuminate\Support\Facades\DB;
 class SQL extends OpenPost
 {
     public $maxID;
+//    public static $time;
+
     public function __construct($header, $urlOpenPost, $text = null, $img = null,
                                 $video = null, $audio = null, $gif = null, $gfycat = null)
     {

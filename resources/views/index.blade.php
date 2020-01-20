@@ -23,10 +23,12 @@ for ($i = 0; $i < 1; $i++){ //кол-во постов для парсинга, 
         $openpost->gfycat);
     $query->insertBD();
 
+    $postVK = new PostingVK();
+
     echo "<br>" . "__________________________________________________";
 }
 
-$postVK = new PostingVK();
+
 
 
 

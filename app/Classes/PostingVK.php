@@ -4,6 +4,7 @@
 namespace App\Classes;
 
 
+use Carbon\Carbon;
 use FFMpeg\Coordinate\Dimension;
 use FFMpeg\Coordinate\FrameRate;
 use FFMpeg\Coordinate\TimeCode;
@@ -26,6 +27,7 @@ class PostingVK extends SQL
 
     public $dataFromBD;
     public static $time;
+    public static $timePrevPost;
 
     public function __construct()
     {
@@ -42,12 +44,16 @@ class PostingVK extends SQL
         $responseArr = $this->uploadOnServerVK($responseArr, $methodVK);
 //        printr($responseArr);
 
+
+
         $this->createPost($responseArr);
         }
         else echo "<br>Такой пост уже был";
 
-        $timeNow = now('+04:00')->unix();
-        var_dump($timeNow);
+//        self::$time = now('+04:00')->unix();
+//        var_dump(self::$time);
+//        self::$timePrevPost = self::$time + 900;
+//        var_dump(self::$timePrevPost);
 
     }
 
@@ -222,7 +228,7 @@ class PostingVK extends SQL
             $request_params = [
                 'user_id' => $this->user_id,
                 'owner_id' => -$this->group_id,
-                'message' => $this->dataFromBD->header . PHP_EOL .
+                'message' => $this->dataFromBD->header . PHP_EOL . PHP_EOL .
                   'Комментарии: ' . $this->dataFromBD->Link_post,
                 'attachments' => 'photo' . $owner_id . '_' . $photo_id,
                 'v' => 5.101,
@@ -230,13 +236,12 @@ class PostingVK extends SQL
             ];
         } else
             if (!empty($responseArr['response']['doc']['id'])) {  //проверка какой тип файла был загружен
-//                $doc_id = $responseArr->response->doc->id;
                 $doc_id = $responseArr['response']['doc']['id'];
                 $owner_id = $responseArr['response']['doc']['owner_id'];
                 $request_params = [
                     'user_id' => $this->user_id,
                     'owner_id' => -$this->group_id,
-                    'message' => $this->dataFromBD->header . PHP_EOL .
+                    'message' => $this->dataFromBD->header . PHP_EOL . PHP_EOL .
                         'Комментарии: ' . $this->dataFromBD->Link_post,
                     'attachments' => 'doc' . $owner_id . '_' . $doc_id,
                     'v' => 5.101,
@@ -249,11 +254,12 @@ class PostingVK extends SQL
                     $request_params = [
                         'user_id' => $this->user_id,
                         'owner_id' => -$this->group_id,
-                        'message' => $this->dataFromBD->header . PHP_EOL .
+                        'message' => $this->dataFromBD->header . PHP_EOL . PHP_EOL .
                             'Комментарии: ' . $this->dataFromBD->Link_post,
                         'attachments' => 'video' . $owner_id . '_' . $video_id,
                         'v' => 5.101,
-                        'access_token' => "$this->access_token_user"
+                        'access_token' => "$this->access_token_user",
+//                        'publish_date' => self::$time,
                     ];
                 }
         //непосредственно постинг в вк
@@ -261,6 +267,6 @@ class PostingVK extends SQL
         $result = json_decode(file_get_contents('https://api.vk.com/method/wall.post?' . $get_params));
 
         $this->updateBD($this->dataFromBD->id);
-        printr( $result);
+        printr($result);
     }
 }
