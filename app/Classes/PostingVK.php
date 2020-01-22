@@ -5,11 +5,19 @@ namespace App\Classes;
 
 
 use Carbon\Carbon;
+use Doctrine\Common\Cache\ApcuCache;
 use FFMpeg\Coordinate\Dimension;
 use FFMpeg\Coordinate\FrameRate;
 use FFMpeg\Coordinate\TimeCode;
+use FFMpeg\Driver\FFMpegDriver;
+use FFMpeg\Driver\FFProbeDriver;
 use FFMpeg\FFMpeg;
+use FFMpeg\FFProbe;
+use FFMpeg\Format\Audio\Aac;
+use FFMpeg\Format\Audio\Mp3;
 use FFMpeg\Format\Video\WebM;
+use http\Url;
+use PhpParser\Builder\Interface_;
 
 class PostingVK extends SQL
 {
@@ -26,8 +34,6 @@ class PostingVK extends SQL
     public $access_token_group;
 
     public $dataFromBD;
-    public static $time;
-    public static $timePrevPost;
 
     public function __construct()
     {
@@ -39,21 +45,16 @@ class PostingVK extends SQL
 
         $methodVK = $this->downloadMedia();
         $responseArr = $this->uploadPostData();
-//        printr($responseArr);
+//        dump($responseArr);
 
         $responseArr = $this->uploadOnServerVK($responseArr, $methodVK);
-//        printr($responseArr);
+//        dd($responseArr);
 
 
 
         $this->createPost($responseArr);
         }
         else echo "<br>Такой пост уже был";
-
-//        self::$time = now('+04:00')->unix();
-//        var_dump(self::$time);
-//        self::$timePrevPost = self::$time + 900;
-//        var_dump(self::$timePrevPost);
 
     }
 
@@ -63,7 +64,7 @@ class PostingVK extends SQL
         if (!empty($dataFromBd->Link_img)){
 
             $url = $dataFromBd->Link_img;
-            $path = '/var/www/html/parser/resources/src/photo_VK.jpg';
+            $path = base_path('resources\src\photo_VK.jpg');
             file_put_contents($path, file_get_contents($url)); //скачивание медиа
             $this->img = new \CURLFile($path);
             $this->post_data = ['file1' => $this->img];
@@ -73,7 +74,7 @@ class PostingVK extends SQL
         } else if(!empty($dataFromBd->Link_gif)){
 
             $url = $dataFromBd->Link_gif;
-            $path = '/var/www/html/parser/resources/src/gif_VK.gif';
+            $path = base_path('resources\src\gif_VK.gif');
             file_put_contents($path, file_get_contents($url));
             $path = $this->convertToGif();
             $this->gif = new \CURLFile($path);
@@ -84,11 +85,11 @@ class PostingVK extends SQL
         } else if(!empty($dataFromBd->Link_video)){
 
             $url = $dataFromBd->Link_video;
-            $path1 = '/var/www/html/parser/resources/src/video_VK.mp4';
+            $path1 = base_path('resources\src\video_VK.mp4');
             file_put_contents($path1, file_get_contents($url));
 
             $audio = $dataFromBd->Link_audio;
-            $path2 = '/var/www/html/parser/resources/src/audio_VK.mp4';
+            $path2 = base_path('resources\src\audio_VK.mp4');
             file_put_contents($path2, file_get_contents($audio));
 
             $this->video = $this->concatVideoAudio($path1, $path2);
@@ -104,8 +105,8 @@ class PostingVK extends SQL
     //конвертация видео без звука в гиф
     public function convertToGif(){
         $ffmpeg = FFMpeg::create();
-        $path = '/var/www/html/parser/resources/src/rPikabu.gif';
-        $video = $ffmpeg->open( '/var/www/html/parser/resources/src/gif_VK.gif' );
+        $path = base_path('resources\src\rPikabu.gif');
+        $video = $ffmpeg->open( base_path('resources\src\gif_VK.gif') );
 
 //        $video
 //            ->filters()->framerate(new FrameRate(30), 30);
@@ -120,18 +121,47 @@ class PostingVK extends SQL
 
     //склеивание аудио и видео
     public function concatVideoAudio($video, $audio){
-        $pathAudio = '/var/www/html/parser/resources/src/audio.mp3';
-        $pathVideo = '/var/www/html/parser/resources/src/video_with_audio.mp4';
-        $path = '/var/www/html/parser/resources/src/';
+        $pathAudio = base_path('resources\src\audio.mp3');
+        $pathVideo = base_path('resources\src\video_with_audio.mp4');
+        $path = base_path('resources\src\\');
 
         //удаление старых файлов, от предыдущих постов
-        unlink($pathAudio);
-        unlink($pathVideo);
+        if (file_exists($pathAudio))
+            unlink($pathAudio);
+
+        if (file_exists($pathVideo))
+            unlink($pathVideo);
+
         //перекодирование видео в звук
-    shell_exec("ffmpeg -i $audio -vn -ar 44100 -ac 2 -ab 320K -f mp3 " . $pathAudio);
-    //склеивание звука и видео
-    shell_exec("ffmpeg -i " . $pathAudio . " -i $video " . $pathVideo);
-    return $pathVideo;
+        shell_exec("ffmpeg -i $audio -vn -ar 44100 -ac 2 -ab 320K -f mp3 " . $pathAudio);
+
+        //склеивание звука и видео
+        shell_exec("ffmpeg -i " . $pathAudio . " -i $video " . $pathVideo);
+        return $pathVideo;
+
+        /*$ffmpeg = FFMpeg::create([
+            'ffmpeg.binaries'  => 'C:\Program Files\ffmpeg-20200121-fc6fde2-win64-static\bin\ffmpeg.exe', // the path to the FFMpeg binary
+            'ffprobe.binaries' => 'C:\Program Files\ffmpeg-20200121-fc6fde2-win64-static\bin\ffprobe.exe', // the path to the FFProbe binary
+            'timeout'          => 300, // the timeout for the underlying process
+            'ffmpeg.threads'   => 4,   // the number of threads that FFMpeg should use);
+            'ffprobe.timeout'  => 30,
+            ]);
+        // Open your video file
+        $video = $ffmpeg->open( $video );
+
+// Set an audio format
+        $audio_format = new Mp3();
+
+// Extract the audio into a new file as mp3
+        $video->save($audio_format, 'audio.mp3');*/
+/*
+// Set the audio file
+        $audio = $ffmpeg->open( $pathAudio );
+
+// Create the waveform
+        $waveform = $audio->waveform();
+        $waveform->save( 'waveform.png' );*/
+
     }
 
 
@@ -204,7 +234,8 @@ class PostingVK extends SQL
                 'v' => $this->v
             ];
             //видео загружается сразу, поэтому выход из этого метода
-        } else return $responseArr = json_decode(json_encode($responseArr), true); //преобазование обьекта в массив
+        } else return $responseArr = json_decode(json_encode($responseArr), true); //преобазование
+        // обьекта в массив
 
         $get_params = http_build_query($request_params);
 
