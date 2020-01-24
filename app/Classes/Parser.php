@@ -25,7 +25,12 @@ class Parser
 
 
     public function __construct($url, $numberPost) {
-        $this->opts = array('http'=>array('header' => "User-Agent:Mozilla/5.0 (Windows NT 6.2) AppleWebKit/537.1 (KHTML, like Gecko) Chrome/21.0.1180.75 Safari/537.1\r\n"));
+        $this->opts = [
+            'https'=>
+            [
+                'header' => "User-Agent:Mozilla/5.0 (Windows NT 6.2) AppleWebKit/537.1 (KHTML, like Gecko) Chrome/21.0.1180.75 Safari/537.1\r\n"
+            ]
+        ];
         $this->context = stream_context_create($this->opts);
         $this->urlForParse = $url;
         $this->numberPost = $numberPost;
