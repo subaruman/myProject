@@ -35,10 +35,14 @@ class PostingVK extends SQL
 
     public $dataFromBD;
 
+    public $nextPostTime;
+
     public function __construct()
     {
         $this->access_token_user = env('VK_TOKEN_USER', false);
         $this->access_token_group = env('VK_TOKEN_GROUP', false);
+
+        $this->getPost();
 
         $this->dataFromBD = $this->selectBD();
         if (empty($this->dataFromBD->was_posted)) {
@@ -51,11 +55,32 @@ class PostingVK extends SQL
 //        dd($responseArr);
 
 
-
         $this->createPost($responseArr);
         }
         else echo "<br>Такой пост уже был";
 
+    }
+
+    //получение последнего поста со стены
+    public function getPost() {
+        $request_params = [
+            'owner_id' => -$this->group_id,
+            'domain' => 'https://vk.com/club159140427',
+            'count' => 1,
+            'filter' => 'postponed',
+            'access_token' => $this->access_token_group,
+            'v' => 5.101,
+        ];
+        $get_params = http_build_query($request_params);
+        $result = json_decode(file_get_contents('https://api.vk.com/method/wall.get?' . $get_params));
+        if (!empty($result->response->items)) {
+            $arItems = $result->response->items;
+            $arLastItem = end($arItems);
+            $this->nextPostTime = $arLastItem->date + 1800; // + 30 минут для след. поста
+        } else
+            $this->nextPostTime = time() + 600;
+
+        dump($this->nextPostTime);
     }
 
     //скачивание медиа контента по юрл
@@ -253,6 +278,7 @@ class PostingVK extends SQL
     }
 
       public function createPost ($responseArr){
+
         if (!empty($responseArr['response'][0]['id'])) {         //проверка какой тип файла был загружен
             $photo_id = $responseArr['response'][0]['id'];
             $owner_id = $responseArr['response'][0]['owner_id'];
@@ -262,6 +288,7 @@ class PostingVK extends SQL
                 'message' => $this->dataFromBD->header . PHP_EOL . PHP_EOL .
                   'Комментарии: ' . $this->dataFromBD->Link_post,
                 'attachments' => 'photo' . $owner_id . '_' . $photo_id,
+                'publish_date' => $this->nextPostTime,
                 'v' => 5.101,
                 'access_token' => "$this->access_token_user"
             ];
@@ -275,6 +302,7 @@ class PostingVK extends SQL
                     'message' => $this->dataFromBD->header . PHP_EOL . PHP_EOL .
                         'Комментарии: ' . $this->dataFromBD->Link_post,
                     'attachments' => 'doc' . $owner_id . '_' . $doc_id,
+                    'publish_date' => $this->nextPostTime,
                     'v' => 5.101,
                     'access_token' => "$this->access_token_user"
                 ];
@@ -288,16 +316,16 @@ class PostingVK extends SQL
                         'message' => $this->dataFromBD->header . PHP_EOL . PHP_EOL .
                             'Комментарии: ' . $this->dataFromBD->Link_post,
                         'attachments' => 'video' . $owner_id . '_' . $video_id,
+                        'publish_date' => $this->nextPostTime,
                         'v' => 5.101,
                         'access_token' => "$this->access_token_user",
-//                        'publish_date' => self::$time,
                     ];
                 }
         //непосредственно постинг в вк
         $get_params = http_build_query($request_params);
         $result = json_decode(file_get_contents('https://api.vk.com/method/wall.post?' . $get_params));
 
-        $this->updateBD($this->dataFromBD->id);
+        $this->updateBD($this->dataFromBD->id); //was_posted = 1
         printr($result);
     }
 }

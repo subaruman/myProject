@@ -16,7 +16,6 @@ class Parser
     public $urlOpenPost;
     public $header;
 
-    protected $opts;
     protected $context;
 
     const HEADER = "._2SdHzo12ISmrC8H86TgSCp._3wqmjmv3tb_k-PROt7qFZe";
@@ -25,17 +24,28 @@ class Parser
 
 
     public function __construct($url, $numberPost) {
-        $this->opts = [
+        $opts = [
             'https'=>
             [
                 'header' => "User-Agent:Mozilla/5.0 (Windows NT 6.2) AppleWebKit/537.1 (KHTML, like Gecko) Chrome/21.0.1180.75 Safari/537.1\r\n"
             ]
         ];
-        $this->context = stream_context_create($this->opts);
+        $this->context = stream_context_create($opts);
         $this->urlForParse = $url;
         $this->numberPost = $numberPost;
 
-        $file = file_get_contents($this->urlForParse,false, $this->context);
+        //курл вместо file_get_contents
+        $curl = curl_init();
+        curl_setopt($curl, CURLOPT_AUTOREFERER, TRUE);
+        curl_setopt($curl, CURLOPT_HEADER, $this->context);
+        curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+        curl_setopt($curl, CURLOPT_URL, $this->urlForParse);
+        curl_setopt($curl, CURLOPT_FOLLOWLOCATION, TRUE);
+
+        $file = curl_exec($curl);
+        curl_close($curl);
+
+//        $file = file_get_contents($this->urlForParse,false, $this->context);
         $this->contentOpenPage = phpQuery::newDocument($file);
     }
 
