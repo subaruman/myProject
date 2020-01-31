@@ -5,6 +5,10 @@ namespace App\Classes;
 
 //top/?t=day
 
+?>
+{{--<iframe href="https://www.reddit.com/r/Pikabu/" />--}}
+
+<?
 
 
 set_time_limit(10000);

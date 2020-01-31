@@ -53,7 +53,7 @@ class Kernel extends ConsoleKernel
                 echo "<br>" . "__________________________________________________";
             }
 
-        })->everyTenMinutes();
+        })->everyFifteenMinutes();
     }
 
     /**
