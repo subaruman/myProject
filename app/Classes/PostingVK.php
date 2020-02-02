@@ -311,8 +311,7 @@ class PostingVK extends SQL
                         'owner_id' => -$this->group_id,
                         'message' => $this->dataFromBD->header . PHP_EOL . PHP_EOL .
                             'Комментарии: ' . $this->dataFromBD->Link_post,
-                        'attachments' => 'video' . $owner_id . '_' . $video_id . ',' 
-                        . $this->dataFromBD->Link_post,
+                        'attachments' => 'video' . $owner_id . '_' . $video_id,
                         'publish_date' => $this->nextPostTime,
                         'v' => 5.101,
                         'access_token' => "$this->access_token_user",
