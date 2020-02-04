@@ -48,11 +48,12 @@ class PostingVK extends SQL
         if (empty($this->dataFromBD->was_posted)) {
 
             $methodVK = $this->downloadMedia();
+
             $responseArr = $this->uploadPostData();
-//        dump($responseArr);
+        // dd($responseArr);
 
             $responseArr = $this->uploadOnServerVK($responseArr, $methodVK);
-//        dd($responseArr);
+        // dd($responseArr);
 
 
             $this->createPost($responseArr);
@@ -137,17 +138,21 @@ class PostingVK extends SQL
     //конвертация видео без звука в гиф
     public function convertToGif()
     {
-        $ffmpeg = FFMpeg::create();
-        $path = base_path('resources\src\rPikabu.gif');
-        $video = $ffmpeg->open(base_path('resources\src\gif_VK.gif'));
+        $ffmpeg = FFMpeg::create([
+            'ffmpeg.binaries'  => 'C:\Program Files\ffmpeg\bin\ffmpeg.exe', // the path to the FFMpeg binary
+            'ffprobe.binaries' => 'C:\Program Files\ffmpeg\bin\ffprobe.exe', // the path to the FFProbe binary
+            'timeout'          => 8000, // the timeout for the underlying process
+            'ffmpeg.threads'   => 12,   // the number of threads that FFMpeg should use
+        ]);
+        $path = base_path('resources\src\rPikabu.gif'); //гиф для загрузки в группу
+        $video = $ffmpeg->open(base_path('resources\src\gif_VK.gif')); //гиф скачаенная с реддита
 
-//        $video
-//            ->filters()->framerate(new FrameRate(30), 30);
-//        $video->save(new WebM(), '/var/www/html/parser/resources/src/video.webm');
-//        $video = $ffmpeg->open('/var/www/html/parser/resources/src/video.webm');
         $video
-            ->gif(TimeCode::fromSeconds(0), new Dimension(320, 240))
+            ->gif(TimeCode::fromSeconds(0), new Dimension(430, 300))
             ->save($path);
+
+        // shell_exec("ffmpeg -i " . $video . "-filter_complex ""[0:v] fps=12,scale=480:-1,split [a][b];[a] palettegen [p];[b][p] paletteuse" . $path);
+        // ffmpeg -i gif_VK.mp4 -pix_fmt rgb24 -filter_complex "[0:v] fps=12,scale=480:-1,split" rPikabu.gif
 
         return $path;
     }
@@ -281,7 +286,7 @@ class PostingVK extends SQL
                 'owner_id' => -$this->group_id,
                 'message' => $this->dataFromBD->header . PHP_EOL . PHP_EOL .
                     'Комментарии: ' . $this->dataFromBD->Link_post,
-                'attachments' => 'photo' . $owner_id . '_' . $photo_id . ',' 
+                'attachments' => 'photo' . $owner_id . '_' . $photo_id . ','
                 . $this->dataFromBD->Link_post,
                 'publish_date' => $this->nextPostTime,
                 'v' => 5.101,
@@ -296,8 +301,7 @@ class PostingVK extends SQL
                     'owner_id' => -$this->group_id,
                     'message' => $this->dataFromBD->header . PHP_EOL . PHP_EOL .
                         'Комментарии: ' . $this->dataFromBD->Link_post,
-                    'attachments' => 'doc' . $owner_id . '_' . $doc_id . ',' 
-                    . $this->dataFromBD->Link_post,
+                    'attachments' => 'doc' . $owner_id . '_' . $doc_id,
                     'publish_date' => $this->nextPostTime,
                     'v' => 5.101,
                     'access_token' => "$this->access_token_user"
