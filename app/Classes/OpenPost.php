@@ -40,6 +40,16 @@ class OpenPost extends Parser
     public function gfycatPost() {
         $gfycat = $this->contentOpenPage->find( OpenPost::GFYCAT)->
         find("iframe")->attr("src");
+
+        $file = file_get_contents($gfycat);
+        $file = phpQuery::newDocument($file);
+
+        $gfycat = $file->find(".embedly-embed")->attr("src");
+        $url = mb_stristr($gfycat, "url=");
+        $url = substr(urldecode($url), 4); //убирает кодированные символы и обрезает url=
+        $endSymbol = strpos($url, "&");
+        $gfycat = substr($url, 0, $endSymbol);
+
         return $this->gfycat = $gfycat;
     }
 
