@@ -32,7 +32,7 @@ class Kernel extends ConsoleKernel
         //          ->hourly();
 
         $schedule->call(function (){
-          /*  set_time_limit(10000);
+            set_time_limit(10000);
             for ($i = 0; $i < 8; $i++){ //кол-во постов для парсинга, больше 8 не работает, т.к. лента не прогружает
                 $parser = new Parser("https://www.reddit.com/r/Pikabu/hot", $i);
                 echo "<br>" . $parser->headerPost();
@@ -51,7 +51,7 @@ class Kernel extends ConsoleKernel
 
                 $postVK = new PostingVK();
                 echo "<br>" . "__________________________________________________";
-            }*/
+            }
 
         })->everyThirtyMinutes();
     }
