@@ -46,7 +46,7 @@ class PostingVK extends SQL
         $this->getPost();
 
         $this->dataFromBD = $this->selectBD();
-        if (empty($this->dataFromBD->was_posted)) {
+        if (empty($this->dataFromBD->was_posted) && empty($this->dataFromBD->text )) {
 
             $methodVK = $this->downloadMedia();
 
@@ -131,11 +131,25 @@ class PostingVK extends SQL
                     $this->getUploadUrl('video.save');
                     $methodVK = 'video.save';
                 } else {
-                    if (!empty($dataFromBd->Link_gfycat)) {
+                    if (!empty($dataFromBd->Link_imgur)) {
+
+                        $url = $dataFromBd->Link_imgur;
+                        $path = base_path('resources\src\imgur_VK.mp4');
+                        unlink($path);
+                        file_put_contents($path, file_get_contents($url));
+
+                        $this->imgur = new \CURLFile($path);
+                        $this->post_data = ['video_file' => $this->imgur];
                         $this->getUploadUrl('video.save');
-                        $methodVK = "video.save";
+                        $methodVK = 'video.save';
+                    } else {
+                        if (!empty($dataFromBd->Link_gfycat)) {
+                            $this->getUploadUrl('video.save');
+                            $methodVK = "video.save";
+                        }
                     }
                 }
+
             }
         }
         return $methodVK;
@@ -229,6 +243,7 @@ class PostingVK extends SQL
         $get_params = http_build_query($request_params);
         $result = file_get_contents('https://api.vk.com/method/' . $methodVK . "?" . $get_params);
         $resultArr = json_decode($result);
+//        dd($resultArr);
         if ($methodVK === "video.save") {
             $this->gfycatVkId = $resultArr->response->video_id;
         }

@@ -7,10 +7,9 @@ use Illuminate\Support\Facades\DB;
 class SQL extends OpenPost
 {
     public $maxID;
-//    public static $time;
 
     public function __construct($header, $urlOpenPost, $text = null, $img = null,
-                                $video = null, $audio = null, $gif = null, $gfycat = null)
+                                $video = null, $audio = null, $imgur = null, $gif = null, $gfycat = null)
     {
        $this->header = $header;
        $this->urlOpenPost = $urlOpenPost;
@@ -18,6 +17,7 @@ class SQL extends OpenPost
        $this->img = $img;
        $this->video = $video;
        $this->audio = $audio;
+       $this->imgur = $imgur;
        $this->gif = $gif;
        $this->gfycat = $gfycat;
     }
@@ -34,6 +34,7 @@ class SQL extends OpenPost
                 'Link_img' => $this->img,
                 'Link_video' => $this->video,
                 'Link_audio' => $this->audio,
+                'Link_imgur' => $this->imgur,
                 'Link_gif' => $this->gif,
                 'Link_gfycat' => $this->gfycat]
         );

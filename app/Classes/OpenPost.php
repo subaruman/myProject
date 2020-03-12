@@ -13,6 +13,7 @@ class OpenPost extends Parser
     public $gif;
     public $video;
     public $audio;
+    public $imgur;
 
     const TEXT = "._3xX726aBn29LDbsDtzr_6E._1Ap4F5maDtT1E1YuCiaO0r.D3IL3FD0RFy_mkKLPwL4";
     const IMG = "._3Oa0THmZ3f5iZXAQ0hBJ0k";
@@ -59,11 +60,28 @@ class OpenPost extends Parser
         $this->gif = $this->contentOpenPage->find(OpenPost::GIF)->find('a')->attr('href');
         if (empty($this->gif)){
             $this->gif = $this->contentOpenPage->find(OpenPost::GIF_REPOST)->find('a')->attr('href');
+
+            if (!empty($this->gif)) {
+                $file = file_get_contents($this->gif);
+                $file = phpQuery::newDocument($file);
+                $imgur = $file->find("source")->attr("src");
+                if (!empty($imgur)) {
+                    $this->imgur = "https:" . $imgur;
+                    $this->gif = null;
+                    return null;
+                }
+            }
+
         }
+
         if (!empty($this->gif)){
             return $this->gif;
         }
         return null;
+    }
+
+    public function imgurPost() {
+        return $this->imgur;
     }
 
 

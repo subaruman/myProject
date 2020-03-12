@@ -12,6 +12,9 @@ for ($i = 0; $i < 8; $i++){ //кол-во постов для парсинга, 
     $parser = new Parser("https://www.reddit.com/r/Pikabu/hot", $i);
     echo "<br>" . $parser->headerPost();
     echo "<br>" . $parser->urlPost();
+    if ($parser->urlOpenPost === "https://www.reddit.com") {
+        continue;
+    }
 //    https://www.reddit.com/r/Pikabu/comments/d80wf6/
     $openpost = new OpenPost($parser->urlOpenPost, $i);
     echo "<br>" . $openpost->textPost();
@@ -19,8 +22,9 @@ for ($i = 0; $i < 8; $i++){ //кол-во постов для парсинга, 
     echo "<br>" . $openpost->gfycatPost();
     echo "<br>" . $openpost->gifPost();
     echo "<br>" . $openpost->videoPost();
+    echo "<br>" . $openpost->imgurPost();
 
-    $query = new SQL($parser->header, $parser->urlOpenPost, $openpost->text, $openpost->img, $openpost->video, $openpost->audio, $openpost->gif,
+    $query = new SQL($parser->header, $parser->urlOpenPost, $openpost->text, $openpost->img, $openpost->video, $openpost->audio, $openpost->imgur, $openpost->gif,
         $openpost->gfycat);
     $query->insertBD();
 

@@ -44,8 +44,10 @@ class Kernel extends ConsoleKernel
                 echo "<br>" . $openpost->gfycatPost();
                 echo "<br>" . $openpost->gifPost();
                 echo "<br>" . $openpost->videoPost();
+                echo "<br>" . $openpost->imgurPost();
 
-                $query = new SQL($parser->header, $parser->urlOpenPost, $openpost->text, $openpost->img, $openpost->video, $openpost->audio, $openpost->gif,
+
+                $query = new SQL($parser->header, $parser->urlOpenPost, $openpost->text, $openpost->img, $openpost->video, $openpost->audio, $openpost->imgur, $openpost->gif,
                     $openpost->gfycat);
                 $query->insertBD();
 
