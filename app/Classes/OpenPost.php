@@ -29,7 +29,7 @@ class OpenPost extends Parser
     }
 
     public function textPost() {
-        $this->text = $this->contentOpenPage->find(OpenPost::TEXT);
+        $this->text = strip_tags($this->contentOpenPage->find(OpenPost::TEXT));
         return $this->text;
     }
 
@@ -58,26 +58,35 @@ class OpenPost extends Parser
 
     public function gifPost() {
         $this->gif = $this->contentOpenPage->find(OpenPost::GIF)->find('a')->attr('href');
+//        dump($this->gif);
+
         if (empty($this->gif)){
             $this->gif = $this->contentOpenPage->find(OpenPost::GIF_REPOST)->find('a')->attr('href');
-
+//            dump($this->gif);
             if (!empty($this->gif)) {
                 $file = file_get_contents($this->gif);
                 $file = phpQuery::newDocument($file);
-                $imgur = $file->find("source")->attr("src");
-                if (!empty($imgur)) {
-                    $this->imgur = "https:" . $imgur;
+                $imgurGif = $file->find(".embedURL")->attr("content"); //gif imgur
+                if (!empty($imgurGif)) {
+                    return $this->gif = $imgurGif;
+                }
+                $imgurVideo = $file->find("source")->attr("src"); //video imgur
+                if (!empty($imgurVideo)) {
+//                    dd($imgurVideo);
+                    $this->imgur = "https:" . $imgurVideo;
+                    return $this->gif = null;
+                } else {
+                    $imgurJpg = $file->find(".post-title-meta")->find("a")->attr("href"); //img imgur
+//                dd($imgurJpg);
+                    $file = file_get_contents($imgurJpg);
+                    $this->contentOpenPage = phpQuery::newDocument($file);
+                    $this->imgPost();
                     $this->gif = null;
                     return null;
                 }
             }
-
         }
-
-        if (!empty($this->gif)){
-            return $this->gif;
-        }
-        return null;
+        return $this->gif;
     }
 
     public function imgurPost() {

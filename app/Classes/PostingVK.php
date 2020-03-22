@@ -146,6 +146,10 @@ class PostingVK extends SQL
                         if (!empty($dataFromBd->Link_gfycat)) {
                             $this->getUploadUrl('video.save');
                             $methodVK = "video.save";
+                        } else {
+                            if (!empty($dataFromBd->text)) {
+                                $methodVK = "text";
+                            }
                         }
                     }
                 }

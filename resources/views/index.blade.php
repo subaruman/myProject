@@ -8,7 +8,7 @@ namespace App\Classes;
 
 set_time_limit(10000);
 
-for ($i = 0; $i < 8; $i++){ //кол-во постов для парсинга, больше 8 не работает, т.к. лента не прогружает
+for ($i = 0; $i < 2; $i++) { //кол-во постов для парсинга, больше 8 не работает, т.к. лента не прогружает
     $parser = new Parser("https://www.reddit.com/r/Pikabu/hot", $i);
     echo "<br>" . $parser->headerPost();
     echo "<br>" . $parser->urlPost();
@@ -16,6 +16,8 @@ for ($i = 0; $i < 8; $i++){ //кол-во постов для парсинга, 
         continue;
     }
 //    https://www.reddit.com/r/Pikabu/comments/d80wf6/
+//    https://www.reddit.com/r/Pikabu/comments/ffanfe/ imgur gifv
+//    https://www.reddit.com/r/Pikabu/comments/fkgluz/ imgur jpg
     $openpost = new OpenPost($parser->urlOpenPost, $i);
     echo "<br>" . $openpost->textPost();
     echo "<br>" . $openpost->imgPost();
@@ -34,11 +36,5 @@ for ($i = 0; $i < 8; $i++){ //кол-во постов для парсинга, 
 }
 
 
-
-
-
 ?>
-
-
-
 
