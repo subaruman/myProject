@@ -66,23 +66,22 @@ class OpenPost extends Parser
             if (!empty($this->gif)) {
                 $file = file_get_contents($this->gif);
                 $file = phpQuery::newDocument($file);
-                $imgurGif = $file->find(".embedURL")->attr("content"); //gif imgur
-                if (!empty($imgurGif)) {
-                    return $this->gif = $imgurGif;
+                $imgurGif = $file->find(".video-container")->children()->attrs("content"); //gif imgur
+                $imgurGif = $imgurGif[8];
+                $format = substr($imgurGif, -4, 4); //8 индекс гифки
+                if (!empty($imgurGif) && $format === "gifv") {
+                    $imgurVideo = $file->find("source")->attr("src"); //video imgur
+                    return $this->gif = "https:" . $imgurVideo; //ссылка на гиф неправильная, поэтому видео
                 }
                 $imgurVideo = $file->find("source")->attr("src"); //video imgur
                 if (!empty($imgurVideo)) {
-//                    dd($imgurVideo);
-                    $this->imgur = "https:" . $imgurVideo;
-                    return $this->gif = null;
+                    return $this->video = "https:" . $imgurVideo;
                 } else {
                     $imgurJpg = $file->find(".post-title-meta")->find("a")->attr("href"); //img imgur
-//                dd($imgurJpg);
                     $file = file_get_contents($imgurJpg);
                     $this->contentOpenPage = phpQuery::newDocument($file);
                     $this->imgPost();
-                    $this->gif = null;
-                    return null;
+                    return $this->gif = null;
                 }
             }
         }

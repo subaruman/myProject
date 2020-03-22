@@ -123,7 +123,6 @@ class PostingVK extends SQL
                     $audio = $dataFromBd->Link_audio;
                     $path2 = base_path('resources\src\audio_VK.mp4');
                     file_put_contents($path2, file_get_contents($audio));
-
                     $this->video = $this->concatVideoAudio($path1, $path2);
 
                     $this->video = new \CURLFile($this->video);

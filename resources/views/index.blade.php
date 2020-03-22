@@ -8,7 +8,7 @@ namespace App\Classes;
 
 set_time_limit(10000);
 
-for ($i = 0; $i < 2; $i++) { //кол-во постов для парсинга, больше 8 не работает, т.к. лента не прогружает
+for ($i = 0; $i < 4; $i++) { //кол-во постов для парсинга, больше 8 не работает, т.к. лента не прогружает
     $parser = new Parser("https://www.reddit.com/r/Pikabu/hot", $i);
     echo "<br>" . $parser->headerPost();
     echo "<br>" . $parser->urlPost();
