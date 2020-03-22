@@ -16,28 +16,25 @@ class Parser
     public $urlOpenPost;
     public $header;
 
-    protected $context;
-
     const HEADER = "._2SdHzo12ISmrC8H86TgSCp._3wqmjmv3tb_k-PROt7qFZe";
     const URL = "._2FCtq-QzlfuN-SwVMUZMM3._3wiKjmhpIpoTE2r5KCm2o6";
     const URL2 = ".y8HYJ-y_lTUHkQIc1mdCq._2INHSNB8V5eaWp4P0rY_mE";
 
 
     public function __construct($url, $numberPost) {
-        $opts = [
+        $header = stream_context_create([
             'https'=>
             [
                 'header' => "User-Agent:Mozilla/5.0 (Windows NT 6.2) AppleWebKit/537.1 (KHTML, like Gecko) Chrome/21.0.1180.75 Safari/537.1\r\n"
             ]
-        ];
-        $this->context = stream_context_create($opts);
+        ]);
         $this->urlForParse = $url;
         $this->numberPost = $numberPost;
 
         //курл вместо file_get_contents
         $curl = curl_init();
         curl_setopt($curl, CURLOPT_AUTOREFERER, TRUE);
-        curl_setopt($curl, CURLOPT_HEADER, $this->context);
+        curl_setopt($curl, CURLOPT_HEADER, $header);
         curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
         curl_setopt($curl, CURLOPT_URL, $this->urlForParse);
         curl_setopt($curl, CURLOPT_FOLLOWLOCATION, TRUE);

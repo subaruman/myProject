@@ -23,7 +23,7 @@ class OpenPost extends Parser
 //_3spkFGVnKMHZ83pDAhW3Mx _2b68Lt6xHaLir5082LDDA9 гиф
 //_2MkcR85HDnYngvlVW2gMMa репост гиф
 
-    public function __construct($url, $numberPost)
+    public function __construct($url, $numberPost = null)
     {
         parent::__construct($url, $numberPost);
     }
