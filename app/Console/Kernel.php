@@ -73,7 +73,6 @@ class Kernel extends ConsoleKernel
                 if ($pikabu !== "Pikabu") {
                     continue;
                 }
-                $url = substr($post["permalink"], 0, 48);
 //    printr("__________________");
 
 
@@ -88,7 +87,7 @@ class Kernel extends ConsoleKernel
 //    https://www.reddit.com/r/Pikabu/comments/ffanfe/ imgur gifv
 //    https://www.reddit.com/r/Pikabu/comments/fkgluz/ imgur jpg
 //    $openpost = new OpenPost($parser->urlOpenPost, $i);
-                $openpost = new OpenPost($url);
+                $openpost = new OpenPost($post["permalink"]);
                 echo "<br>" . $openpost->textPost();
                 echo "<br>" . $openpost->imgPost();
                 echo "<br>" . $openpost->gfycatPost();
@@ -98,7 +97,7 @@ class Kernel extends ConsoleKernel
 
 //    $query = new SQL($parser->header, $parser->urlOpenPost, $openpost->text, $openpost->img, $openpost->video, $openpost->audio, $openpost->imgur, $openpost->gif,
 //        $openpost->gfycat);
-                $query = new SQL($post["title"], $url, $openpost->text, $openpost->img, $openpost->video, $openpost->audio, $openpost->imgur, $openpost->gif,
+                $query = new SQL($post["title"], $post["permalink"], $openpost->text, $openpost->img, $openpost->video, $openpost->audio, $openpost->imgur, $openpost->gif,
                     $openpost->gfycat);
                 $query->insertBD();
 
