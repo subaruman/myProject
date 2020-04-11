@@ -21,7 +21,7 @@ class CreateUsersTable extends Migration
             $table->string('Link_img')->nullable();
             $table->string('Link_video')->nullable();
             $table->string('Link_audio')->nullable();
-            $table->string('Link_imgur')->nullable();
+            $table->string('Link_silent_video')->nullable();
             $table->string('Link_gif')->nullable();
             $table->string('Link_gfycat')->nullable();
             $table->boolean('was_posted')->nullable();
@@ -35,6 +35,6 @@ class CreateUsersTable extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('users');
+        Schema::dropIfExists('post');
     }
 }

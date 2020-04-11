@@ -46,9 +46,15 @@ class PostingVK extends SQL
         $this->getPost();
 
         $this->dataFromBD = $this->selectBD();
-        if (empty($this->dataFromBD->was_posted) && empty($this->dataFromBD->text )) {
+        if (empty($this->dataFromBD->was_posted) && empty($this->dataFromBD->text)) {
 
             $methodVK = $this->downloadMedia();
+
+            if ($methodVK === null) {
+                //если пост не спарсился
+                $this->updateBD($this->dataFromBD->id, 2);
+                return null;
+            }
 
             $responseArr = $this->uploadPostData();
 //         dd($responseArr);
@@ -70,17 +76,18 @@ class PostingVK extends SQL
         $request_params = [
             'owner_id' => -$this->group_id,
             'domain' => 'https://vk.com/club' . $this->group_id,
-            'count' => 10,
+            'count' => 150,
             'filter' => 'postponed',
             'access_token' => $this->access_token_group,
             'v' => 5.101,
         ];
         $get_params = http_build_query($request_params);
         $result = json_decode(file_get_contents('https://api.vk.com/method/wall.get?' . $get_params));
+
         if (!empty($result->response->items)) {
             $arItems = $result->response->items;
             $arLastItem = end($arItems);
-            $this->nextPostTime = $arLastItem->date + 1728; // + 30 минут для след. поста
+            $this->nextPostTime = $arLastItem->date + 2100; // + 35 минут для след. поста
         } else {
             $time = time();
             $this->nextPostTime = $time + 600;
@@ -90,6 +97,7 @@ class PostingVK extends SQL
     //скачивание медиа контента по юрл
     public function downloadMedia()
     {
+        $methodVK = null;
         $dataFromBd = $this->selectBD();
         if (!empty($dataFromBd->Link_img)) {
 
@@ -130,15 +138,15 @@ class PostingVK extends SQL
                     $this->getUploadUrl('video.save');
                     $methodVK = 'video.save';
                 } else {
-                    if (!empty($dataFromBd->Link_imgur)) {
+                    if (!empty($dataFromBd->Link_silent_video)) {
 
-                        $url = $dataFromBd->Link_imgur;
-                        $path = base_path('resources\src\imgur_VK.mp4');
+                        $url = $dataFromBd->Link_silent_video;
+                        $path = base_path('resources\src\silent_video_VK.mp4');
                         unlink($path);
                         file_put_contents($path, file_get_contents($url));
 
-                        $this->imgur = new \CURLFile($path);
-                        $this->post_data = ['video_file' => $this->imgur];
+                        $this->silent_video = new \CURLFile($path);
+                        $this->post_data = ['video_file' => $this->silent_video];
                         $this->getUploadUrl('video.save');
                         $methodVK = 'video.save';
                     } else {
@@ -162,10 +170,10 @@ class PostingVK extends SQL
     public function convertToGif()
     {
         $ffmpeg = FFMpeg::create([
-            'ffmpeg.binaries'  => 'C:\Program Files\ffmpeg\bin\ffmpeg.exe', // the path to the FFMpeg binary
+            'ffmpeg.binaries' => 'C:\Program Files\ffmpeg\bin\ffmpeg.exe', // the path to the FFMpeg binary
             'ffprobe.binaries' => 'C:\Program Files\ffmpeg\bin\ffprobe.exe', // the path to the FFProbe binary
-            'timeout'          => 8000, // the timeout for the underlying process
-            'ffmpeg.threads'   => 12,   // the number of threads that FFMpeg should use
+            'timeout' => 8000, // the timeout for the underlying process
+            'ffmpeg.threads' => 12,   // the number of threads that FFMpeg should use
         ]);
         $path = base_path('resources\src\rPikabu.gif'); //гиф для загрузки в группу
         $video = $ffmpeg->open(base_path('resources\src\gif_VK.gif')); //гиф скачаенная с реддита
@@ -326,7 +334,7 @@ class PostingVK extends SQL
                 'message' => $this->dataFromBD->header . PHP_EOL . PHP_EOL .
                     'Комментарии: ' . $this->dataFromBD->Link_post,
                 'attachments' => 'photo' . $owner_id . '_' . $photo_id . ','
-                . $this->dataFromBD->Link_post,
+                    . $this->dataFromBD->Link_post,
                 'publish_date' => $this->nextPostTime,
                 'v' => 5.101,
                 'access_token' => "$this->access_token_user"
@@ -379,7 +387,7 @@ class PostingVK extends SQL
         $get_params = http_build_query($request_params);
         $result = json_decode(file_get_contents('https://api.vk.com/method/wall.post?' . $get_params));
 
-        $this->updateBD($this->dataFromBD->id); //was_posted = 1
+        $this->updateBD($this->dataFromBD->id, 1); //was_posted = 1
         printr($result);
     }
 }
