@@ -35,7 +35,7 @@ class Kernel extends ConsoleKernel
         $schedule->call(function (){
             $request = new Request();
             $request->authoriseRequest();
-            $response = $request->getPosts();
+            $response = $request->getHotPosts();
 
             foreach ($response["posts"] as $post) {
 
@@ -60,7 +60,7 @@ class Kernel extends ConsoleKernel
                 echo "<br>" . "__________________________________________________";
             }
 
-        })->everyThirtyMinutes();
+        })->hourly();
     }
 
     /**
