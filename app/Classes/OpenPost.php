@@ -52,6 +52,7 @@ class OpenPost extends Parser
     public function imgPost()
     {
         $this->img = $this->contentOpenPage->find(OpenPost::IMG)->find('a')->attr('href');
+//        $this->getHeightImg($this->img);
         return $this->img;
     }
 
@@ -192,5 +193,13 @@ class OpenPost extends Parser
             $this->silent_video = null;
             return $this->gif = $link;
         }
+    }
+
+    public function getHeightImg($url)
+    {
+        $path = base_path('resources\src\long_img\long_img.jpg');
+        file_put_contents($path, file_get_contents($url));
+        $height = getimagesize($path)[1];           //1 индекс высоты картинки из массива getimagesize
+//        dd($height);
     }
 }

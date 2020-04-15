@@ -5,9 +5,9 @@ namespace App\Classes;
 set_time_limit(10000);
 
 $request = new Request();
-$request->authoriseRequest();
-$response = $request->getPosts();
-
+//$request->authoriseRequest();
+$response = $request->getHotPosts();
+dd($response);
 
 foreach ($response["posts"] as $post) {
 
