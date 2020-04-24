@@ -2,6 +2,7 @@
 
 
 namespace App\Classes;
+
 use Illuminate\Support\Facades\DB;
 
 class SQL extends OpenPost
@@ -9,25 +10,28 @@ class SQL extends OpenPost
     public $maxID;
 
     public function __construct($header, $urlOpenPost, $text = null, $img = null,
-                                $video = null, $audio = null, $silent_video = null, $gif = null, $gfycat = null)
+                                $video = null, $audio = null, $silent_video = null, $gif = null, $gfycat = null,
+                                $long_img = null)
     {
-       $this->header = $header;
-       $this->urlOpenPost = $urlOpenPost;
-       $this->text = $text;
-       $this->img = $img;
-       $this->video = $video;
-       $this->audio = $audio;
-       $this->silent_video = $silent_video;
-       $this->gif = $gif;
-       $this->gfycat = $gfycat;
+        $this->header = $header;
+        $this->urlOpenPost = $urlOpenPost;
+        $this->text = $text;
+        $this->img = $img;
+        $this->video = $video;
+        $this->audio = $audio;
+        $this->silent_video = $silent_video;
+        $this->gif = $gif;
+        $this->gfycat = $gfycat;
+        $this->long_img = $long_img;
     }
 
-    public function insertBD() {
+    public function insertBD()
+    {
 
         $this->maxID = DB::table('post')->max('id');
         $this->maxID++;
         DB::table('post')->insertOrIgnore(
-                ['id' => $this->maxID,
+            ['id' => $this->maxID,
                 'header' => $this->header,
                 'Link_post' => $this->urlOpenPost,
                 'text' => $this->text,
@@ -36,21 +40,25 @@ class SQL extends OpenPost
                 'Link_audio' => $this->audio,
                 'Link_silent_video' => $this->silent_video,
                 'Link_gif' => $this->gif,
-                'Link_gfycat' => $this->gfycat]
+                'Link_gfycat' => $this->gfycat,
+                'Link_long_img' => $this->long_img,
+            ]
         );
 
     }
 
-    public function selectBD() {
+    public function selectBD()
+    {
         $this->maxID = DB::table('post')->max('id');
-        $post = DB::select('SELECT * FROM post WHERE id = ?' , [$this->maxID]);
+        $post = DB::select('SELECT * FROM post WHERE id = ?', [$this->maxID]);
         return $post[0];
     }
 
-    public function updateBD($id, $status) {
+    public function updateBD($id, $status)
+    {
         DB::table('post')->where('id', $id)
             ->update([
-               'was_posted' => $status
+                'was_posted' => $status
             ]);
     }
 

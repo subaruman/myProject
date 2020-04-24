@@ -15,7 +15,7 @@ class CreateUsersTable extends Migration
     {
         Schema::create('post', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->string('header');
+            $table->string('header', 1500);
             $table->string('Link_post')->unique();
             $table->text('text')->nullable();
             $table->string('Link_img')->nullable();
@@ -24,6 +24,7 @@ class CreateUsersTable extends Migration
             $table->string('Link_silent_video')->nullable();
             $table->string('Link_gif')->nullable();
             $table->string('Link_gfycat')->nullable();
+            $table->string('Link_long_img')->nullable();
             $table->boolean('was_posted')->nullable();
         });
     }

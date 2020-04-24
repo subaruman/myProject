@@ -50,6 +50,10 @@ class PostingVK extends SQL
 
             $methodVK = $this->downloadMedia();
 
+            if ($methodVK === 'long_img') {
+                return "Длиннопост";
+            }
+
             if ($methodVK === null) {
                 //если пост не спарсился
                 $this->updateBD($this->dataFromBD->id, 2);
@@ -57,11 +61,10 @@ class PostingVK extends SQL
             }
 
             $responseArr = $this->uploadPostData();
-//         dd($responseArr);
+//         dump($responseArr);
 
             $responseArr = $this->uploadOnServerVK($responseArr, $methodVK);
 //         dd($responseArr);
-
 
             $this->createPost($responseArr);
         } else {
@@ -87,7 +90,7 @@ class PostingVK extends SQL
         if (!empty($result->response->items)) {
             $arItems = $result->response->items;
             $arLastItem = end($arItems);
-            $this->nextPostTime = $arLastItem->date + 2100; // + 35 минут для след. поста
+            $this->nextPostTime = $arLastItem->date + 1800; // + 35 минут для след. поста
         } else {
             $time = time();
             $this->nextPostTime = $time + 600;
@@ -154,13 +157,39 @@ class PostingVK extends SQL
                             $this->getUploadUrl('video.save');
                             $methodVK = "video.save";
                         } else {
-                            if (!empty($dataFromBd->text)) {
-                                $methodVK = "text";
+                            if (!empty($dataFromBd->Link_long_img)) {
+
+                                $path = base_path("resources\src\long_img\parts\\");
+                                $arFiles = scandir($path);
+                                $arFiles = array_slice($arFiles, 2);
+                                $i = 1;
+                                $methodVK = 'photos.saveWallPhoto';
+                                foreach ($arFiles as $item) {
+                                    $img = new \CURLFile($path . $item);
+                                    $this->post_data = ["file" . $i => $img];
+
+                                    $this->getUploadUrl('photos.getWallUploadServer');
+                                    $responseArr = $this->uploadPostData();
+                                    $responseArr = $this->uploadOnServerVK($responseArr, $methodVK);
+
+                                    $photos[] = 'photo' . $responseArr['response'][0]['owner_id'] . '_'
+                                        . $responseArr['response'][0]['id'];
+                                    $i++;
+                                }
+                                //преобразование массива фоток  в строку
+                                $strPhotos = implode(',' , $photos) . ',' . $this->dataFromBD->Link_post;
+
+                                $this->createPost($responseArr, $strPhotos);
+
+                                $methodVK = 'long_img'; //для использования в uploadOnServerVk
+                            } else {
+                                if (!empty($dataFromBd->text)) {
+                                    $methodVK = "text";
+                                }
                             }
                         }
                     }
                 }
-
             }
         }
         return $methodVK;
@@ -267,6 +296,9 @@ class PostingVK extends SQL
     //post запрос
     public function uploadPostData()
     {
+//        $this->post_data = http_build_query($this->post_data);
+
+
         $ch = curl_init($this->uploadUrl);
         curl_setopt($ch, CURLOPT_POST, 1);
         curl_setopt($ch, CURLOPT_HTTPHEADER, ["Content-Type: multipart/form-data"]);
@@ -323,71 +355,85 @@ class PostingVK extends SQL
         return $responseArr;
     }
 
-    public function createPost($responseArr)
+    public function createPost($responseArr, $strPhotos = null)
     {
-        if (!empty($responseArr['response'][0]['id'])) {         //проверка какой тип файла был загружен
-            $photo_id = $responseArr['response'][0]['id'];
-            $owner_id = $responseArr['response'][0]['owner_id'];
+        if (!empty($strPhotos) && !empty($responseArr['response'][0]['id'])) { //длиннопост
             $request_params = [
                 'user_id' => $this->user_id,
                 'owner_id' => -$this->group_id,
                 'message' => $this->dataFromBD->header . PHP_EOL . PHP_EOL .
                     'Комментарии: ' . $this->dataFromBD->Link_post,
-                'attachments' => 'photo' . $owner_id . '_' . $photo_id . ','
-                    . $this->dataFromBD->Link_post,
+                'attachments' => $strPhotos ,
                 'publish_date' => $this->nextPostTime,
                 'v' => 5.101,
                 'access_token' => "$this->access_token_user"
             ];
         } else {
-            if (!empty($responseArr['response']['doc']['id'])) {  //проверка какой тип файла был загружен
-                $doc_id = $responseArr['response']['doc']['id'];
-                $owner_id = $responseArr['response']['doc']['owner_id'];
+            if (!empty($responseArr['response'][0]['id'])) {         //проверка какой тип файла был загружен
+                $photo_id = $responseArr['response'][0]['id'];
+                $owner_id = $responseArr['response'][0]['owner_id'];
                 $request_params = [
                     'user_id' => $this->user_id,
                     'owner_id' => -$this->group_id,
                     'message' => $this->dataFromBD->header . PHP_EOL . PHP_EOL .
                         'Комментарии: ' . $this->dataFromBD->Link_post,
-                    'attachments' => 'doc' . $owner_id . '_' . $doc_id,
+                    'attachments' => 'photo' . $owner_id . '_' . $photo_id . ','
+                        . $this->dataFromBD->Link_post,
                     'publish_date' => $this->nextPostTime,
                     'v' => 5.101,
                     'access_token' => "$this->access_token_user"
                 ];
             } else {
-                if (!empty($responseArr['video_id'])) {
-                    $video_id = $responseArr['video_id'];
-                    $owner_id = $responseArr['owner_id'];
+                if (!empty($responseArr['response']['doc']['id'])) {  //проверка какой тип файла был загружен
+                    $doc_id = $responseArr['response']['doc']['id'];
+                    $owner_id = $responseArr['response']['doc']['owner_id'];
                     $request_params = [
                         'user_id' => $this->user_id,
                         'owner_id' => -$this->group_id,
                         'message' => $this->dataFromBD->header . PHP_EOL . PHP_EOL .
                             'Комментарии: ' . $this->dataFromBD->Link_post,
-                        'attachments' => 'video' . $owner_id . '_' . $video_id,
+                        'attachments' => 'doc' . $owner_id . '_' . $doc_id,
                         'publish_date' => $this->nextPostTime,
                         'v' => 5.101,
-                        'access_token' => "$this->access_token_user",
+                        'access_token' => "$this->access_token_user"
                     ];
                 } else {
-                    if ($responseArr["response"] === 1) {
+                    if (!empty($responseArr['video_id'])) {
+                        $video_id = $responseArr['video_id'];
+                        $owner_id = $responseArr['owner_id'];
                         $request_params = [
                             'user_id' => $this->user_id,
                             'owner_id' => -$this->group_id,
                             'message' => $this->dataFromBD->header . PHP_EOL . PHP_EOL .
                                 'Комментарии: ' . $this->dataFromBD->Link_post,
-                            'attachments' => 'video' . '-' . $this->group_id . '_' . $this->gfycatVkId,
+                            'attachments' => 'video' . $owner_id . '_' . $video_id,
                             'publish_date' => $this->nextPostTime,
                             'v' => 5.101,
                             'access_token' => "$this->access_token_user",
                         ];
+                    } else {
+                        if ($responseArr["response"] === 1) {
+                            $request_params = [
+                                'user_id' => $this->user_id,
+                                'owner_id' => -$this->group_id,
+                                'message' => $this->dataFromBD->header . PHP_EOL . PHP_EOL .
+                                    'Комментарии: ' . $this->dataFromBD->Link_post,
+                                'attachments' => 'video' . '-' . $this->group_id . '_' . $this->gfycatVkId,
+                                'publish_date' => $this->nextPostTime,
+                                'v' => 5.101,
+                                'access_token' => "$this->access_token_user",
+                            ];
+                        }
                     }
                 }
             }
         }
+
         //непосредственно постинг в вк
         $get_params = http_build_query($request_params);
         $result = json_decode(file_get_contents('https://api.vk.com/method/wall.post?' . $get_params));
 
         $this->updateBD($this->dataFromBD->id, 1); //was_posted = 1
-        printr($result);
+        printr($result);        //$result->error->error_code добавить обработку ошибки
     }
 }

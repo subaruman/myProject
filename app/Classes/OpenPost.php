@@ -15,12 +15,15 @@ class OpenPost extends Parser
     public $video;
     public $audio;
     public $silent_video;
+    public $long_img;
+    public $arPartsLongImg;
 
     const TEXT = "._3xX726aBn29LDbsDtzr_6E._1Ap4F5maDtT1E1YuCiaO0r.D3IL3FD0RFy_mkKLPwL4";
     const IMG = "._3Oa0THmZ3f5iZXAQ0hBJ0k";
     const GFYCAT = "._3JgI-GOrkmyIeDeyzXdyUD._2CSlKHjH7lsjx0IpjORx14";
     const GIF = "._3spkFGVnKMHZ83pDAhW3Mx";
     const GIF_REPOST = "._2MkcR85HDnYngvlVW2gMMa";
+
 //_3spkFGVnKMHZ83pDAhW3Mx _2b68Lt6xHaLir5082LDDA9 гиф
 //_2MkcR85HDnYngvlVW2gMMa репост гиф
 
@@ -52,7 +55,15 @@ class OpenPost extends Parser
     public function imgPost()
     {
         $this->img = $this->contentOpenPage->find(OpenPost::IMG)->find('a')->attr('href');
-//        $this->getHeightImg($this->img);
+        if (!empty($this->img)) {
+            if ($this->isLongImg($this->img) === true) {
+                $this->long_img = $this->img;
+                $this->img = null;
+                return $this->long_img;
+            } else {
+                return $this->img;
+            }
+        }
         return $this->img;
     }
 
@@ -89,13 +100,16 @@ class OpenPost extends Parser
                 $file = file_get_contents($this->gif);
                 $file = phpQuery::newDocument($file);
                 $imgurGif = $file->find(".video-container")->children()->attrs("content"); //gif imgur
-                $imgurGif = $imgurGif[8];
-                $format = substr($imgurGif, -4, 4); //8 индекс гифки
-                if (!empty($imgurGif) && $format === "gifv") {
-                    $imgurVideo = $file->find("source")->attr("src"); //video imgur
-                    $link = "https:" . $imgurVideo;
-                    return $this->getDuration($link);
+                if (!empty($imgurGif[8])) {
+                    $imgurGif = $imgurGif[8];
+                    $format = substr($imgurGif, -4, 4); //8 индекс гифки
+                    if (!empty($imgurGif) && $format === "gifv") {
+                        $imgurVideo = $file->find("source")->attr("src"); //video imgur
+                        $link = "https:" . $imgurVideo;
+                        return $this->getDuration($link);
+                    }
                 }
+
                 $imgurVideo = $file->find("source")->attr("src"); //video imgur
                 if (!empty($imgurVideo)) {
                     return $this->silent_video = "https:" . $imgurVideo;
@@ -164,6 +178,7 @@ class OpenPost extends Parser
         if (@file_get_contents($audio_track, false, $this->context) === FALSE) {
             if (empty($this->gif)) { //если изначально было спаршено как гиф, то не выполнять
                 $this->gif = $this->checkVideoQuality($video_link . "DASH_1080", 0);
+                $this->getDuration($this->gif);
                 echo $this->gif;
             }
 
@@ -195,11 +210,67 @@ class OpenPost extends Parser
         }
     }
 
-    public function getHeightImg($url)
+    public function isLongImg($url)
     {
         $path = base_path('resources\src\long_img\long_img.jpg');
         file_put_contents($path, file_get_contents($url));
+
+        $width = getimagesize($path)[0];
         $height = getimagesize($path)[1];           //1 индекс высоты картинки из массива getimagesize
-//        dd($height);
+        $longImg = imagecreatefromjpeg(base_path('resources\src\long_img\long_img.jpg'));
+        if ($height > 2500) {
+            $this->cropLongImg($height, $width, $longImg);
+
+            return true;
+        }
+        return false;
+    }
+
+    public function cropLongImg($height, $width, $longImg)
+    {
+        $this->arPartsLongImg = [
+            base_path('resources\src\long_img\parts\part1.jpg'),
+            base_path('resources\src\long_img\parts\part2.jpg'),
+            base_path('resources\src\long_img\parts\part3.jpg'),
+            base_path('resources\src\long_img\parts\part4.jpg'),
+            base_path('resources\src\long_img\parts\part5.jpg'),
+            base_path('resources\src\long_img\parts\part6.jpg'),
+            base_path('resources\src\long_img\parts\part7.jpg'),
+            base_path('resources\src\long_img\parts\part8.jpg'),
+            base_path('resources\src\long_img\parts\part9.jpg'),
+        ];
+
+        foreach ($this->arPartsLongImg as $elem) {
+            if (file_exists($elem)) {
+                unlink($elem);
+            }
+        }
+
+        $limit = floor($height / 2000);
+        $residue = -($limit * 2000 - $height);     //остаток
+
+        $y = 0;
+        for ($i = 0; $i < $limit; $i++) {
+            $arCoordinate = [
+                "x" => "0",
+                "y" => $y,
+                "width" => $width,
+                "height" => 2000,
+            ];
+            $img = imagecrop($longImg, $arCoordinate);
+            imagejpeg($img, $this->arPartsLongImg[$i], 100);
+            $y += 2000;
+        }
+
+        if ($residue > 500) {
+            $arCoordinate = [
+                "x" => "0",
+                "y" => $y,
+                "width" => $width,
+                "height" => $residue,
+            ];
+            $img = imagecrop($longImg, $arCoordinate);
+            imagejpeg($img, $this->arPartsLongImg[$i], 100);
+        }
     }
 }
