@@ -5,6 +5,8 @@ namespace App\Classes;
 
 use FFMpeg\FFProbe;
 use PhpQuery\PhpQuery;
+use PHPUnit\Exception;
+use Symfony\Component\Finder\SplFileInfo;
 
 class OpenPost extends Parser
 {
@@ -217,10 +219,15 @@ class OpenPost extends Parser
 
         $width = getimagesize($path)[0];
         $height = getimagesize($path)[1];           //1 индекс высоты картинки из массива getimagesize
-        $longImg = imagecreatefromjpeg(base_path('resources\src\long_img\long_img.jpg'));
+
+        try {
+            $longImg = @(imagecreatefromjpeg($path));
+        } catch (Exception $e) {
+            $longImg = imagecreatefrompng($path);
+        }
+
         if ($height > 2500) {
             $this->cropLongImg($height, $width, $longImg);
-
             return true;
         }
         return false;

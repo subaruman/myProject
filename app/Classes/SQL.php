@@ -9,39 +9,31 @@ class SQL extends OpenPost
 {
     public $maxID;
 
-    public function __construct($header, $urlOpenPost, $text = null, $img = null,
-                                $video = null, $audio = null, $silent_video = null, $gif = null, $gfycat = null,
-                                $long_img = null)
+    public function __construct()
     {
-        $this->header = $header;
-        $this->urlOpenPost = $urlOpenPost;
-        $this->text = $text;
-        $this->img = $img;
-        $this->video = $video;
-        $this->audio = $audio;
-        $this->silent_video = $silent_video;
-        $this->gif = $gif;
-        $this->gfycat = $gfycat;
-        $this->long_img = $long_img;
+
     }
 
-    public function insertBD()
+    public function insertBD($header, $urlOpenPost, $text = null, $img = null,
+                             $video = null, $audio = null, $silent_video = null, $gif = null, $gfycat = null,
+                             $long_img = null)
     {
 
         $this->maxID = DB::table('post')->max('id');
         $this->maxID++;
         DB::table('post')->insertOrIgnore(
-            ['id' => $this->maxID,
-                'header' => $this->header,
-                'Link_post' => $this->urlOpenPost,
-                'text' => $this->text,
-                'Link_img' => $this->img,
-                'Link_video' => $this->video,
-                'Link_audio' => $this->audio,
-                'Link_silent_video' => $this->silent_video,
-                'Link_gif' => $this->gif,
-                'Link_gfycat' => $this->gfycat,
-                'Link_long_img' => $this->long_img,
+            [
+                'id' => $this->maxID,
+                'header' => $header,
+                'Link_post' => $urlOpenPost,
+                'text' => $text,
+                'Link_img' => $img,
+                'Link_video' => $video,
+                'Link_audio' => $audio,
+                'Link_silent_video' => $silent_video,
+                'Link_gif' => $gif,
+                'Link_gfycat' => $gfycat,
+                'Link_long_img' => $long_img,
             ]
         );
 
@@ -60,6 +52,15 @@ class SQL extends OpenPost
             ->update([
                 'was_posted' => $status
             ]);
+    }
+
+    public function checkLinkBD($link)
+    {
+       $response = DB::table('post')->where('Link_post', "=", $link)->get();
+       if (!empty($response[0])) {
+           return true;
+       }
+       return false;
     }
 
 }
