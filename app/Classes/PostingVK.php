@@ -21,10 +21,10 @@ use PhpParser\Builder\Interface_;
 
 class PostingVK extends SQL
 {
-    public $group_id = 159140427;
-    public $user_id = 464383830;
-    public $album_id = 249770511;
-    public $vkAppId = 7081424; //id standalone приложения
+    public $group_id = 194662546;
+    public $user_id = 594343913;
+    public $album_id = 272216856;
+    public $vkAppId = 7431814; //id standalone приложения
     public $v = 5.101; //версия апи вк
 
     public $uploadUrl; //ссылка для загрузки
@@ -61,7 +61,7 @@ class PostingVK extends SQL
             }
 
             $responseArr = $this->uploadPostData();
-//         dump($responseArr);
+//         dd($responseArr);
 
             $responseArr = $this->uploadOnServerVK($responseArr, $methodVK);
 //         dd($responseArr);
@@ -81,7 +81,7 @@ class PostingVK extends SQL
             'domain' => 'https://vk.com/club' . $this->group_id,
             'count' => 150,
             'filter' => 'postponed',
-            'access_token' => $this->access_token_group,
+            'access_token' => $this->access_token_user,
             'v' => 5.101,
         ];
         $get_params = http_build_query($request_params);
